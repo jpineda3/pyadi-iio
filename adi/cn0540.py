@@ -192,10 +192,19 @@ class cn0540(rx, context_manager):
     @property
     def red_led_enable(self):
         """red_led_enable: Enable red LED on board"""
-        return self._get_iio_attr("voltage1", "raw", True, self._gpio)
+        return self._get_iio_attr("voltage0", "raw", True, self._gpio)
 
     @red_led_enable.setter
     def red_led_enable(self, value):
+        self._set_iio_attr_int("voltage0", "raw", True, value, self._gpio)
+    
+    @property
+    def blue_led_enable(self):
+        """blue_led_enable: Enable blue LED on board"""
+        return self._get_iio_attr("voltage1", "raw", True, self._gpio)
+
+    @blue_led_enable.setter
+    def blue_led_enable(self, value):
         self._set_iio_attr_int("voltage1", "raw", True, value, self._gpio)
 
     @property
