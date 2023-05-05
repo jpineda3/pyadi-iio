@@ -30,7 +30,7 @@ import instr_m2k
 
 ################### Voltmeter ###################
 # Create voltmeter instrument from ip uri
-m2k_uri = "ip:192.168.2.1"
+m2k_uri = "usb:1.20.5"
 m2k_ctx = instr_m2k.connect(uri=m2k_uri, calibrate=False)
 voltmeter = instr_m2k.create_instr(m2k_ctx, "voltmeter")
 
