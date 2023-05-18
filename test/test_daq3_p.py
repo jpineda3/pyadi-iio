@@ -2,6 +2,7 @@ import pytest
 
 hardware = "daq3"
 classname = "adi.DAQ3"
+bit_shift = -2
 
 
 #########################################
@@ -37,6 +38,7 @@ def test_daq3_rx_data(test_dma_rx, iio_uri, classname, channel):
     ],
 )
 @pytest.mark.parametrize("peak_min", [-50])
+@pytest.mark.parametrize("bit_shift", [bit_shift])
 def test_daq3_dds_loopback(
     test_dds_loopback,
     iio_uri,
@@ -46,9 +48,10 @@ def test_daq3_dds_loopback(
     frequency,
     scale,
     peak_min,
+    bit_shift,
 ):
     test_dds_loopback(
-        iio_uri, classname, param_set, channel, frequency, scale, peak_min
+        iio_uri, classname, param_set, channel, frequency, scale, peak_min, bit_shift,
     )
 
 

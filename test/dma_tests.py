@@ -241,6 +241,7 @@ def dds_loopback(
     frequency,
     scale,
     peak_min,
+    bit_shift=0,
     use_obs=False,
     use_rx2=False,
 ):
@@ -307,7 +308,16 @@ def dds_loopback(
         del sdr
         raise Exception(e)
     del sdr
-    tone_peaks, tone_freqs = spec.spec_est(data, fs=RXFS, ref=2 ** 15, plot=False)
+
+    n = abs(bit_shift)
+    if bit_shift < 0:  # left shift
+        np.left_shift(data, n, data) / (2 ** n)
+    elif bit_shift > 0:  # right shift
+        np.right_shift(data, n, data) * (2 ** n)
+
+    tone_peaks, tone_freqs = spec.spec_est(
+        data, fs=RXFS, ref=2 ** (15 + bit_shift), plot=False
+    )
     indx = np.argmax(tone_peaks)
     diff = np.abs(tone_freqs[indx] - frequency)
     s = "Peak: " + str(tone_peaks[indx]) + "@" + str(tone_freqs[indx])
