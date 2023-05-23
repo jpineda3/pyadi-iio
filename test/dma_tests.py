@@ -310,13 +310,21 @@ def dds_loopback(
     del sdr
 
     n = abs(bit_shift)
+    print("Data min: " + str(min(data)) + ", max: " + str(max(data)))
     if bit_shift < 0:  # left shift
-        np.left_shift(data, n, data) / (2 ** n)
+        np.left_shift(data, n, data) / (
+            2 ** n
+        )  # division is not applied here, frequency ok, peak higher than measured in osc
+        # data = data / (2 ** n) # this will divide as expected, returns same value as before shifting - restored magnitude and retained the sign
+        print("Data min: " + str(min(data)) + ", max: " + str(max(data)))
     elif bit_shift > 0:  # right shift
         np.right_shift(data, n, data) * (2 ** n)
 
     tone_peaks, tone_freqs = spec.spec_est(
-        data, fs=RXFS, ref=2 ** (15 + bit_shift), plot=False
+        data,
+        fs=RXFS,
+        ref=2 ** (15 + 0),
+        plot=False,  # if division is omitted, values are taken as 16 bits
     )
     indx = np.argmax(tone_peaks)
     diff = np.abs(tone_freqs[indx] - frequency)
