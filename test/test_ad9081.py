@@ -11,11 +11,14 @@ def scale_field(param_set, iio_uri):
     # Scale fields to match number of channels
     import adi
 
+    param_len = 0
     dev = adi.ad9081(uri=iio_uri)
     for field in param_set:
         if isinstance(param_set[field], list):
-            existing_val = getattr(dev, field)
-            param_set[field] = [param_set[field][0]] * len(existing_val)
+            if not param_len:
+                existing_val = getattr(dev, field)
+                param_len = len(existing_val)
+            param_set[field] = [param_set[field][0]] * param_len
     return param_set
 
 
@@ -117,8 +120,8 @@ def test_ad9081_tx_data(test_dma_tx, iio_uri, classname, channel):
     [
         dict(
             loopback_mode=0,
-            rx_nyquist_zone=["odd", "odd", "odd", "odd"],
             tx_channel_nco_gain_scales=[0.5, 0.5, 0.5, 0.5],
+            rx_nyquist_zone=["odd", "odd", "odd", "odd"],
             rx_main_nco_frequencies=[1000000000, 1000000000, 1000000000, 1000000000],
             tx_main_nco_frequencies=[1000000000, 1000000000, 1000000000, 1000000000],
             rx_channel_nco_frequencies=[0, 0, 0, 0],
