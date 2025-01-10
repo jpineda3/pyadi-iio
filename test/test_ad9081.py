@@ -197,6 +197,7 @@ def test_ad9081_cyclic_buffers_exception(
 
 
 #########################################
+@pytest.mark.order("last")
 @pytest.mark.iio_hardware(hardware)
 @pytest.mark.parametrize("classname", [(classname)])
 @pytest.mark.parametrize("channel", [0])
