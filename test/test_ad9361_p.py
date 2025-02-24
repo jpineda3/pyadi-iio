@@ -22,8 +22,15 @@ def test_ad9361_pass_in_rerun(classname):
         os.environ['VAR_THAT_EXISTS_ONLY_AFTER_FAILURE'] = 'EXISTING_VAR'
         raise AssertionError
 
+#########################################
 @pytest.mark.iio_hardware(hardware)
 @pytest.mark.parametrize("classname", [(classname)])
 @pytest.mark.parametrize("param", [True, True, True])
 def test_ad9361_sandwich_passing(param,classname):
     assert param == True
+
+#########################################
+@pytest.mark.iio_hardware(hardware)
+@pytest.mark.parametrize("classname", [(classname)])
+def test_ad9361_known_failing(classname):
+    raise AssertionError
