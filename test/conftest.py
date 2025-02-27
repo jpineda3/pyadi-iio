@@ -22,6 +22,20 @@ import pytest
 
 import adi
 
+import yaml
+
+KNOWN_FAILING_FILE = os.path.join(os.path.dirname(__file__), "test-harness-failures.yaml")
+
+def load_known_failing():
+    """Load known failing tests from YAML."""
+    with open(KNOWN_FAILING_FILE, "r") as f:
+        return yaml.safe_load(f) or {}
+
+def is_known_failing(test_name, hardware):
+    """Check if a test is in the known failing list."""
+    known_failures = load_known_failing()
+    return hardware in known_failures.get(test_name, [])
+
 try:
     from test.scpi import dcxo_calibrate
 
@@ -37,6 +51,21 @@ def pytest_runtest_makereport(item, call):
     """
 
     if call.when == "call" and call.excinfo is not None:
+        if item.config.getoption("--harness-validation"):  # Only run if flag is enabled
+            hardware = item.config.getoption("--hardware", default="default_hardware")
+            test_name = item.name
+
+        # Check if the test is known failing
+        print(f"Test reruns left:'{item.config.option.reruns}'")
+        if is_known_failing(test_name, hardware):
+            item.add_marker("flaky")
+            print(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
+            item.add_marker(pytest.mark.skip(reason=f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun."))
+        else:
+            print(f"Test '{test_name}' on '{hardware}' is a new failure. Reboot then rerun to validate.")
+            
+                
+
         # Extract error type and message
         exception_type_and_message_formatted = call.excinfo.exconly() or "N/A"
         item.user_properties.append(
@@ -317,3 +346,13 @@ def test_verify_links(request):
 @pytest.fixture()
 def test_verify_links_errors_stable(request):
     yield verify_links_errors_stable
+
+#########################################
+# Test Harness Fixtures
+
+
+@pytest.fixture
+def validation_enabled(request):
+    """Fixture to check if validation is enabled."""
+    return request.config.getoption("--harness-validation")
+

@@ -67,6 +67,10 @@ def pytest_addoption(parser):
     parser.addoption(
         "--password", default="analog", help="SSH login password",
     )
+    parser.addoption(
+        "--harness-validation",action="store_true",
+        help="Enable results validation for failing tests.",
+    )
 
 
 def pytest_runtest_setup(item):
@@ -93,6 +97,10 @@ def pytest_runtest_setup(item):
         pytest.skip("CMOS testing disabled. Use --cmos flag to enable")
     elif not lvds and "lvds_test" in marks:
         pytest.skip("LVDS testing disabled. Use --lvds flag to enable")
+    
+    # Test harness validation
+    if item.config.getoption("--harness-validation"):
+        item.config.option.reruns = 1
 
 
 def pytest_generate_tests(metafunc):
