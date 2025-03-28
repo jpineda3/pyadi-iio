@@ -55,14 +55,15 @@ def pytest_runtest_makereport(item, call):
             test_name = item.name
 
             # Check if the test is known failing
-            print(f"Test reruns left:'{item.config.option.reruns}'")
             if is_known_failing(test_name, hardware):
-                item.add_marker("flaky")
-                print(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
-                item.add_marker(pytest.mark.skip(reason=f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun."))
+                item.add_marker(pytest.mark.skip())
+                logger.info(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
             else:
-                print(f"Test '{test_name}' on '{hardware}' is a new failure. Reboot then rerun to validate.")
-            
+                if call.excinfo.type is AssertionError:
+                    logger.info(f"Unlikely AssertionError for '{test_name}' on '{hardware}'. Rerunning test immediately.")
+                else:
+                    logger.info(f"Test '{test_name}' on '{hardware}' is a new failure. First reboot then rerun to validate.")
+                    item.config.option.reruns = 0
                 
 
         # Extract error type and message

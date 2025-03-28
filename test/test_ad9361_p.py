@@ -34,3 +34,8 @@ def test_ad9361_sandwich_passing(param,classname):
 @pytest.mark.parametrize("classname", [(classname)])
 def test_ad9361_known_failing(classname):
     raise AssertionError
+
+@pytest.mark.iio_hardware(hardware)
+@pytest.mark.parametrize("classname", [(classname)])
+def test_ad9361_type_error(classname):
+    raise TypeError

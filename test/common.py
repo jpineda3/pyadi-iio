@@ -100,7 +100,8 @@ def pytest_runtest_setup(item):
     
     # Test harness validation
     if item.config.getoption("--harness-validation"):
-        item.config.option.reruns = 1
+        item.config.option.reruns = 1  # Set the number of reruns dynamically
+        # item.add_marker(pytest.mark.flaky(reruns=1))
 
 
 def pytest_generate_tests(metafunc):
