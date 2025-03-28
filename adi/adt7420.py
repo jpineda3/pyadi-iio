@@ -19,7 +19,7 @@ class adt7420(attribute, context_manager):
         if not self._ctrl:
             raise Exception("ADT7420 device not found")
 
-        self.temp = self._channel(self._ctrl, "temp")
+        self.temp = self._channel(self._ctrl, "temp1")
 
     class _channel(attribute):
         """ADT7420 Channel"""
@@ -31,44 +31,44 @@ class adt7420(attribute, context_manager):
         @property
         def temp_val(self):
             """ ADT7420 Channel Temperature Value """
-            return self._get_iio_attr(self.name, "temp", False)
+            return self._get_iio_attr(self.name, "input", False)
 
         @property
         def temp_max(self):
             """ ADT7420 Channel Max Temperature """
-            return self._get_iio_attr(self.name, "temp_max", False)
+            return self._get_iio_attr(self.name, "max", False)
 
         @temp_max.setter
         def temp_max(self, value):
             """ ADT7420 Channel Max Temperature """
-            return self._set_iio_attr(self.name, "temp_max", False, value)
+            return self._set_iio_attr(self.name, "max", False, value)
 
         @property
         def temp_min(self):
             """ ADT7420 Channel Min Temperature """
-            return self._get_iio_attr(self.name, "temp_min", False)
+            return self._get_iio_attr(self.name, "min", False)
 
         @temp_min.setter
         def temp_min(self, value):
             """ ADT7420 Channel Min Temperature """
-            return self._set_iio_attr(self.name, "temp_min", False, value)
+            return self._set_iio_attr(self.name, "min", False, value)
 
         @property
         def temp_crit(self):
             """ ADT7420 Channel Critical Temperature """
-            return self._get_iio_attr(self.name, "temp_crit", False)
+            return self._get_iio_attr(self.name, "crit", False)
 
         @temp_crit.setter
         def temp_crit(self, value):
             """ ADT7420 Channel Critical Temperature """
-            return self._set_iio_attr(self.name, "temp_crit", False, value)
+            return self._set_iio_attr(self.name, "crit", False, value)
 
         @property
         def temp_hyst(self):
             """ ADT7420 Channel Hysteresis Temperature """
-            return self._get_iio_attr(self.name, "temp_hyst", False)
+            return self._get_iio_attr(self.name, "crit_hyst", False)
 
         @temp_hyst.setter
         def temp_hyst(self, value):
             """ ADT7420 Channel Hysteresis Temperature """
-            return self._set_iio_attr(self.name, "temp_hyst", False, value)
+            return self._set_iio_attr(self.name, "crit_hyst", False, value)
