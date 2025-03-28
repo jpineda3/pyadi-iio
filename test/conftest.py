@@ -49,20 +49,19 @@ def pytest_runtest_makereport(item, call):
     This pytest hook is used to create a custom test report using
     the xml property tag to add custom properties
     """
-
     if call.when == "call" and call.excinfo is not None:
         if item.config.getoption("--harness-validation"):  # Only run if flag is enabled
-            hardware = item.config.getoption("--hardware", default="default_hardware")
+            hardware = item.config.getoption("-m", default="unknown_hardware")
             test_name = item.name
 
-        # Check if the test is known failing
-        print(f"Test reruns left:'{item.config.option.reruns}'")
-        if is_known_failing(test_name, hardware):
-            item.add_marker("flaky")
-            print(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
-            item.add_marker(pytest.mark.skip(reason=f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun."))
-        else:
-            print(f"Test '{test_name}' on '{hardware}' is a new failure. Reboot then rerun to validate.")
+            # Check if the test is known failing
+            print(f"Test reruns left:'{item.config.option.reruns}'")
+            if is_known_failing(test_name, hardware):
+                item.add_marker("flaky")
+                print(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
+                item.add_marker(pytest.mark.skip(reason=f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun."))
+            else:
+                print(f"Test '{test_name}' on '{hardware}' is a new failure. Reboot then rerun to validate.")
             
                 
 

@@ -1,3 +1,0 @@
-# Pyadi-iio failing tests on specific platforms
-test_ad9361_known_failing:
-  - zynq_zc702_adv7511_ad9361_fmcomms2_3
