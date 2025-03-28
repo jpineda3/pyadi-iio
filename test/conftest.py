@@ -23,8 +23,16 @@ import pytest
 import adi
 
 import yaml
+import logging
 
 KNOWN_FAILING_FILE = os.path.join(os.path.dirname(__file__), "test-harness-failures.yaml")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler()]
+)
+logger = logging.getLogger(__name__)
 
 def load_known_failing():
     """Load known failing tests from YAML."""
