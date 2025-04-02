@@ -24,6 +24,7 @@ import adi
 
 import yaml
 import logging
+import subprocess
 
 KNOWN_FAILING_FILE = os.path.join(os.path.dirname(__file__), "test-harness-failures.yaml")
 
@@ -77,8 +78,22 @@ def pytest_runtest_makereport(item, call):
                 else:
                     if item.rerun_attempt < item.config.option.reruns:
                         logger.info(f"New {call.excinfo.type} for '{test_name}' on '{hardware}'. Rebooting device before rerunning.")
-                        # nebula reboot command goes here
-                        item.rerun_attempt += 1
+                        try:
+                            # result = subprocess.run(
+                            #     ["nebula", "net.restart-board", "--board-name", hardware.replace("_", "-")],
+                            #     capture_output=True,
+                            #     check=True,
+                            #     text=True
+                            # )
+                            result = subprocess.run(
+                                ["powershell", "-Command", "1 / 1"],
+                                capture_output=True,
+                                check=True,
+                                text=True
+                            )
+                            item.rerun_attempt += 1
+                        except subprocess.CalledProcessError as e:
+                            logger.error(f"Failed to reboot '{hardware}'. Marking {test_name} as failure.")
                     else:
                         logger.info(f"'{test_name}' on '{hardware}' still failed after reboot and is considered a valid failure.")
           
