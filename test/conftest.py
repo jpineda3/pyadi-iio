@@ -62,18 +62,26 @@ def pytest_runtest_makereport(item, call):
             hardware = item.config.getoption("-m", default="unknown_hardware")
             test_name = item.name
 
-            # Check if the test is known failing
+            # Track reruns using a custom attribute
+            if not hasattr(item, "rerun_attempt"):
+                item.rerun_attempt = 0
+
+            # Rerun only if not in known failing list
             if is_known_failing(test_name, hardware):
                 item.add_marker(pytest.mark.skip())
                 logger.info(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
-            else:
+            else: # Rerun immediately if AssertionError, else reboot before rerun
                 if call.excinfo.type is AssertionError:
                     logger.info(f"Unlikely AssertionError for '{test_name}' on '{hardware}'. Rerunning test immediately.")
+                    item.rerun_attempt += 1
                 else:
-                    logger.info(f"Test '{test_name}' on '{hardware}' is a new failure. First reboot then rerun to validate.")
-                    item.config.option.reruns = 0
-                
-
+                    if item.rerun_attempt < item.config.option.reruns:
+                        logger.info(f"New {call.excinfo.type} for '{test_name}' on '{hardware}'. Rebooting device before rerunning.")
+                        # nebula reboot command goes here
+                        item.rerun_attempt += 1
+                    else:
+                        logger.info(f"'{test_name}' on '{hardware}' still failed after reboot and is considered a valid failure.")
+          
         # Extract error type and message
         exception_type_and_message_formatted = call.excinfo.exconly() or "N/A"
         item.user_properties.append(
