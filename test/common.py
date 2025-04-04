@@ -8,6 +8,17 @@ import pytest
 
 import adi
 
+KNOWN_FAILING_FILE = os.path.join(os.path.dirname(__file__), "test-harness-failures.yaml")
+
+def load_known_failing():
+    """Load known failing tests from YAML."""
+    with open(KNOWN_FAILING_FILE, "r") as f:
+        return yaml.safe_load(f) or {}
+    
+def is_known_failing(test_name, hardware):
+    """Check if a test is in the known failing list."""
+    known_failures = load_known_failing()
+    return hardware in known_failures.get(test_name, [])
 
 def pytest_configure(config):
     # Add customer marks to ini to remove warnings
@@ -100,9 +111,14 @@ def pytest_runtest_setup(item):
     
     # Test harness validation
     if item.config.getoption("--harness-validation"):
-        item.config.option.reruns = 1  # Set the number of reruns dynamically
-        # item.add_marker(pytest.mark.flaky(reruns=1))
+        hardware = item.config.getoption("-m", default="unknown_hardware")
+        test_name = item.name
+        if is_known_failing(test_name, hardware):
+            item.config.option.reruns = 0
+            item.add_marker(pytest.mark.xfail(reason=f"Test is known failing on {hardware}. Do not reboot or rerun in case of failure."))
 
+        else:
+            item.config.option.reruns = 1
 
 def pytest_generate_tests(metafunc):
     if "username" in metafunc.fixturenames:

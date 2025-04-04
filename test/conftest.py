@@ -26,24 +26,13 @@ import yaml
 import logging
 import subprocess
 
-KNOWN_FAILING_FILE = os.path.join(os.path.dirname(__file__), "test-harness-failures.yaml")
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.ERROR,
     format="%(levelname)s - %(message)s",
     handlers=[logging.StreamHandler()]
 )
 logger = logging.getLogger(__name__)
-
-def load_known_failing():
-    """Load known failing tests from YAML."""
-    with open(KNOWN_FAILING_FILE, "r") as f:
-        return yaml.safe_load(f) or {}
-
-def is_known_failing(test_name, hardware):
-    """Check if a test is in the known failing list."""
-    known_failures = load_known_failing()
-    return hardware in known_failures.get(test_name, [])
 
 try:
     from test.scpi import dcxo_calibrate
@@ -67,35 +56,33 @@ def pytest_runtest_makereport(item, call):
             if not hasattr(item, "rerun_attempt"):
                 item.rerun_attempt = 0
 
-            # Rerun only if not in known failing list
-            if is_known_failing(test_name, hardware):
-                item.add_marker(pytest.mark.skip())
-                logger.info(f"Test '{test_name}' on '{hardware}' is known failing. Do not reboot or rerun.")
-            else: # Rerun immediately if AssertionError, else reboot before rerun
-                if call.excinfo.type is AssertionError:
-                    logger.info(f"Unlikely AssertionError for '{test_name}' on '{hardware}'. Rerunning test immediately.")
-                    item.rerun_attempt += 1
+            if call.excinfo.type is AssertionError:
+                logger.info(f"Unlikely AssertionError for '{test_name}' on '{hardware}'. Rerunning test immediately.")
+                if item.rerun_attempt == item.config.option.reruns:
+                    logger.info(f"'{test_name}' on '{hardware}' still failed after rerun and is considered a valid failure.")
+                item.rerun_attempt += 1
+            else:
+                if item.rerun_attempt < item.config.option.reruns:
+                    logger.info(f"New {call.excinfo.type} for '{test_name}' on '{hardware}'. Rebooting device before rerunning.")
+                    try:
+                        # result = subprocess.run(
+                        #     ["nebula", "net.restart-board", "--board-name", hardware.replace("_", "-")],
+                        #     capture_output=True,
+                        #     check=True,
+                        #     text=True
+                        # )
+                        result = subprocess.run(
+                            ["powershell", "-Command", "1 / 0"],
+                            capture_output=True,
+                            check=True,
+                            text=True
+                        )
+                        logger.info(f"Successfully rebooted '{hardware}'.")
+                        item.rerun_attempt += 1
+                    except subprocess.CalledProcessError as e:
+                        logger.error(f"Failed to reboot '{hardware}'. Marking {test_name} as failure.")
                 else:
-                    if item.rerun_attempt < item.config.option.reruns:
-                        logger.info(f"New {call.excinfo.type} for '{test_name}' on '{hardware}'. Rebooting device before rerunning.")
-                        try:
-                            # result = subprocess.run(
-                            #     ["nebula", "net.restart-board", "--board-name", hardware.replace("_", "-")],
-                            #     capture_output=True,
-                            #     check=True,
-                            #     text=True
-                            # )
-                            result = subprocess.run(
-                                ["powershell", "-Command", "1 / 1"],
-                                capture_output=True,
-                                check=True,
-                                text=True
-                            )
-                            item.rerun_attempt += 1
-                        except subprocess.CalledProcessError as e:
-                            logger.error(f"Failed to reboot '{hardware}'. Marking {test_name} as failure.")
-                    else:
-                        logger.info(f"'{test_name}' on '{hardware}' still failed after reboot and is considered a valid failure.")
+                    logger.info(f"'{test_name}' on '{hardware}' still failed after reboot and is considered a valid failure.")
           
         # Extract error type and message
         exception_type_and_message_formatted = call.excinfo.exconly() or "N/A"
