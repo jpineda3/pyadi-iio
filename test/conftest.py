@@ -60,32 +60,24 @@ def pytest_runtest_makereport(item, call):
                 logger.info(f"'{test_name}' on '{hardware}' is known failing on {hardware}. Do not reboot or rerun.")
             else:
                 if call.excinfo.type is AssertionError:
-                    logger.info(f"Unlikely AssertionError for '{test_name}' on '{hardware}'. Rerunning test immediately.")
                     if item.rerun_attempt == item.config.option.reruns:
                         logger.info(f"'{test_name}' on '{hardware}' still failed after rerun and is considered a valid failure.")
-                    item.rerun_attempt += 1
-                else:
-                    if item.rerun_attempt < item.config.option.reruns:
-                        logger.info(f"New {call.excinfo.type} for '{test_name}' on '{hardware}'. Rebooting device before rerunning.")
-                        try:
-                            # result = subprocess.run(
-                            #     ["nebula", "net.restart-board", "--board-name", hardware.replace("_", "-")],
-                            #     capture_output=True,
-                            #     check=True,
-                            #     text=True
-                            # )
-                            result = subprocess.run(
-                                ["powershell", "-Command", "1 / 1"],
-                                capture_output=True,
-                                check=True,
-                                text=True
-                            )
-                            logger.info(f"Successfully rebooted '{hardware}'.")
-                            item.rerun_attempt += 1
-                        except subprocess.CalledProcessError as e:
-                            logger.error(f"Failed to reboot '{hardware}'. Marking {test_name} as failure.")
                     else:
+                        logger.info(f"Unlikely AssertionError for '{test_name}' on '{hardware}'. Rerunning test immediately.")
+                        item.rerun_attempt += 1
+                else:
+                    if item.rerun_attempt == item.config.option.reruns:
                         logger.info(f"'{test_name}' on '{hardware}' still failed after reboot and is considered a valid failure.")
+                    else:
+                        logger.info(f"New {call.excinfo.type} for '{test_name}' on '{hardware}'. Rebooting device before rerunning.")
+                        # result = subprocess.run(
+                        #     ["nebula", "net.restart-board", "--board-name", hardware.replace("_", "-")],
+                        #     capture_output=True,
+                        #     text=True
+                        # )
+                        # sleep(60)
+                        logger.info(f"Successfully rebooted '{hardware}'.")
+                        item.rerun_attempt += 1
           
         # Extract error type and message
         exception_type_and_message_formatted = call.excinfo.exconly() or "N/A"

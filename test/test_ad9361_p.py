@@ -37,5 +37,5 @@ def test_ad9361_known_failing(classname):
 
 @pytest.mark.iio_hardware(hardware)
 @pytest.mark.parametrize("classname", [(classname)])
-def test_ad9361_type_error(classname):
+def test_ad9361_non_assertion_failure(classname):
     raise TypeError
